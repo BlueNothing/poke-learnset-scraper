@@ -1,40 +1,8 @@
 # Pokemon Scraper
 
-Retrieves **ALL 893 Pokemon** (Gen I to XIII) from *Serebii* in a single request and saves to **.json** or **.csv file**. Includes basic information only like types and stats.
+Intended to retrieve all Pokemon from Serebii that can learn a specified move in a single request, saving to a JSON file. Includes information such as number, name, type, and stats.
 
-## Sample
-
-```
-    {
-        "num": 892,
-        "name": "Urshifu",
-        "types": [
-            "fighting",
-            "dark"
-        ],
-        "hp": 100,
-        "atk": 130,
-        "def": 100,
-        "sp_atk": 63,
-        "sp_def": 60,
-        "spd": 97
-    },
-    {
-        "num": 893,
-        "name": "Zarude",
-        "types": [
-            "dark",
-            "grass"
-        ],
-        "hp": 105,
-        "atk": 120,
-        "def": 105,
-        "sp_atk": 70,
-        "sp_def": 95,
-        "spd": 105
-    }
-```
-
+Derivative of tomcruz17's poke-scraper: https://github.com/tomcruz17/poke-scraper
 
 ## Prerequisites
 
@@ -45,6 +13,6 @@ Retrieves **ALL 893 Pokemon** (Gen I to XIII) from *Serebii* in a single request
 
 1. Install dependencies: `pip install -r requirements.txt`
 2. Run via python
-    * Linux - `python3 scripts/scrape-mons.py --output path/pokedex.json`
-    * Windows - `python scripts/scrape-mons.py --output path/pokedex.json`
+    * Linux - `python3 scripts/scrape-mons.py --output pound`
+    * Windows - `python scripts/scrape-mons.py --output pound`
 
