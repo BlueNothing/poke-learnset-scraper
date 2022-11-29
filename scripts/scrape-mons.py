@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 """
-This module scrapes https://www.serebii.net/pokemon/nationalpokedex.shtml for the most basic pokemon info: types & stats.
+This module scrapes the Scarlet/Violet Attackdex on Serebii to try and find learnsets for a given move.
 """
 
 import requests
@@ -14,15 +14,17 @@ from argparse import ArgumentParser
 logging.basicConfig(level=logging.INFO)
 LOGGER = logging.getLogger(__name__)
 
-PARSER = ArgumentParser(description='Pokémon scraper that gets all 893 Pokemon (Gen I to XIII) from Serebii.')
-PARSER.add_argument('-o', '--output', action='store', help='Saves the results to an output file: .json or .csv. Format is based on file extension.')
+PARSER = ArgumentParser(description='Pokémon scraper that pulls the learnset for move specified in argument from Serebii.')
+PARSER.add_argument('-o', '--output', action='store', help='Saves the results to an output .json file.')
 ARGS = PARSER.parse_args()
+
+#Later version of this code should take a pair of user inputs and cross-reference the specified moves' learnsets for a match.
 
 def get_mons(url):
     LOGGER.info(f'Getting Pokemons from {url}...')
     res = requests.get(url)
     soup = BeautifulSoup(res.text, 'html.parser')
-    dex_table = soup.find('table', class_='dextable')
+    dex_table = soup.find('table',  class_='dextable')
     rows = dex_table.findAll('tr')
 
     mons = []
@@ -35,9 +37,12 @@ def get_mons(url):
             for c in num_raw:
                 if c.isdigit():
                     num += c
-            mon[NUM_KEY] = int(num)
+            try:
+                mon[NUM_KEY] = int(num)
+            except:
+                print(num)
+                mon[NUM_KEY]=num
             mon[NAME_KEY] = cols[NAME_IDX].find('a').text
-
             types_tags = cols[TYPES_IDX].findAll('a')
             mon[TYPE_KEY] = []
             for a in types_tags:
@@ -53,7 +58,6 @@ def get_mons(url):
             mons.append(mon)
         except Exception as ex:
             LOGGER.error(f"Can't parse row {index}. {ex}")
-        
     LOGGER.info(f'Found {len(mons)}.')
     LOGGER.info(f'Done getting Pokemons from {url}.')
 
@@ -71,10 +75,11 @@ def write_to_json(mons, filename):
         json.dump(mons, output_file, indent=4)
 
 if __name__=='__main__':
-    url = 'https://www.serebii.net/pokemon/nationalpokedex.shtml'
+    url_base = 'https://www.serebii.net/attackdex-sv/'
+    url = url_base + ARGS.output + '.shtml' #Should take the form of 'movename.shtml'
     mons = get_mons(url)
     if ARGS.output:
-        filename = ARGS.output
+        filename = 'path/' + ARGS.output + '.json'
         filetype = filename[filename.rindex('.')+1:]
         try:
             if filetype == 'csv':
