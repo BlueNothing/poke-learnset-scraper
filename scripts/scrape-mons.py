@@ -3,35 +3,42 @@
 This module scrapes the Scarlet/Violet Attackdex on Serebii to try and find learnsets for a given move.
 """
 
-import requests
-import logging
 import csv
 import json
-from constants import *
-from bs4 import BeautifulSoup
+import logging
 from argparse import ArgumentParser
+from bs4 import BeautifulSoup
+from constants import *
+import requests
 
 logging.basicConfig(level=logging.INFO)
 LOGGER = logging.getLogger(__name__)
 
-PARSER = ArgumentParser(description='Pokémon scraper that pulls the learnset for move specified in argument from Serebii.')
+
+PARSER = ArgumentParser(description='Pokemon scraper that pulls the learnset for move specified in argument from Serebii.')
 PARSER.add_argument('-o', '--output', action='store', help='Saves the results to an output .json file.')
 ARGS = PARSER.parse_args()
 
 #Later version of this code should take a pair of user inputs and cross-reference the specified moves' learnsets for a match.
 
 def get_mons(url):
-    LOGGER.info(f'Getting Pokemons from {url}...')
+    LOGGER.info(f"Getting Pokemon from {url}...")
     res = requests.get(url)
     soup = BeautifulSoup(res.text, 'html.parser')
     dex_table = soup.find('table',  class_='dextable')
     rows = dex_table.findAll('tr')
-
+    #10 rows is reasonable, why only 4 columns?
     mons = []
     for index,row in enumerate(rows[2:len(rows) - 1:2]):
         try:
             cols = row.findAll('td')
+            print(len(cols))
             num_raw = cols[NUM_IDX].text
+            print(len(num_raw))
+            #Okay, so it seems like num_raw is why we're getting four entries. Why is cols[NUM_IDX].text only getting four entries?
+            print(cols[NUM_IDX].text) #So something happens after the second 088 that stops the later entries from loading on pound?
+            #While I'm thinking about it, how does the code know that column is called NUM_IDX in the first place?
+            #And how does the code decide that it's 10 rows and not 12?
             mon = {}
             num = ''
             for c in num_raw:
@@ -57,9 +64,10 @@ def get_mons(url):
             print(mon)
             mons.append(mon)
         except Exception as ex:
+            print(index)
             LOGGER.error(f"Can't parse row {index}. {ex}")
     LOGGER.info(f'Found {len(mons)}.')
-    LOGGER.info(f'Done getting Pokemons from {url}.')
+    LOGGER.info(f'Done getting Pokemon from {url}.')
 
     return mons
 
@@ -75,8 +83,10 @@ def write_to_json(mons, filename):
         json.dump(mons, output_file, indent=4)
 
 if __name__=='__main__':
+    print("Starting execution")
     url_base = 'https://www.serebii.net/attackdex-sv/'
     url = url_base + ARGS.output + '.shtml' #Should take the form of 'movename.shtml'
+    print(url)
     mons = get_mons(url)
     if ARGS.output:
         filename = 'path/' + ARGS.output + '.json'
@@ -88,7 +98,3 @@ if __name__=='__main__':
                 write_to_json(mons, filename)
         except Exception as ex:
             LOGGER.error(f'Error writing to {filename}. {ex}')
-
-
-
-

@@ -1,0 +1,57 @@
+[
+    {
+        "num": 39,
+        "name": "Jigglypuff",
+        "types": [
+            "normal.shtml",
+            "fairy.shtml"
+        ],
+        "hp": 115,
+        "atk": 45,
+        "def": 20,
+        "sp_atk": 45,
+        "sp_def": 25,
+        "spd": 20
+    },
+    {
+        "num": 40,
+        "name": "Wigglytuff",
+        "types": [
+            "normal.shtml",
+            "fairy.shtml"
+        ],
+        "hp": 140,
+        "atk": 70,
+        "def": 45,
+        "sp_atk": 85,
+        "sp_def": 50,
+        "spd": 45
+    },
+    {
+        "num": 88,
+        "name": "Grimer",
+        "types": [
+            "poison.shtml"
+        ],
+        "hp": 80,
+        "atk": 80,
+        "def": 50,
+        "sp_atk": 40,
+        "sp_def": 50,
+        "spd": 25
+    },
+    {
+        "num": 88,
+        "name": "Grimer",
+        "types": [
+            "poison.shtml",
+            "dark.shtml"
+        ],
+        "hp": 80,
+        "atk": 80,
+        "def": 50,
+        "sp_atk": 40,
+        "sp_def": 50,
+        "spd": 25
+    }
+]
