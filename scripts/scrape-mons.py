@@ -21,36 +21,46 @@ ARGS = PARSER.parse_args()
 
 #Later version of this code should take a pair of user inputs and cross-reference the specified moves' learnsets for a match.
 
+#Taking a moment here to analyze the structure of the Serebii moveset pages more closely...
+#The important stuff is in the 'content' div, specifically under the 'main' tag, but not everything under the 'main' tag.
+#The good stuff is going to be in a table with class 'dextable'. 
+#What if we try to process *every* dextable that comes up in the attackdex for that page? Junk data that overwhelms the user, more work.
+#Time to make some strategic decisions. Assume user knows what moves do.
+#Limit scope to finding candidates for overlapping learnsets and showing their stats.
+#Deduction - Need to sort through the 'dextables' and only count the ones that start with a dex number field.
+#This is fine because every row we care about will start with a dex number field, no matter how the move is taught.
+#All dex number fields start with a '#', regardless of whether the dex entry they correspond to has a NatDex number.
+
 def get_mons(url):
     LOGGER.info(f"Getting Pokemon from {url}...")
     res = requests.get(url)
-    soup = BeautifulSoup(res.text, 'html.parser')
+    soup = BeautifulSoup(res.text, 'html.parser') 
     dex_table = soup.find('table',  class_='dextable')
-    rows = dex_table.findAll('tr')
-    #10 rows is reasonable, why only 4 columns?
+    rows = dex_table.find_all('tr')
     mons = []
     for index,row in enumerate(rows[2:len(rows) - 1:2]):
         try:
-            cols = row.findAll('td')
+            cols = row.find_all('td')
             print(len(cols))
+            print(*cols,  sep = "\n")
+            print(NUM_IDX)
             num_raw = cols[NUM_IDX].text
             print(len(num_raw))
             #Okay, so it seems like num_raw is why we're getting four entries. Why is cols[NUM_IDX].text only getting four entries?
             print(cols[NUM_IDX].text) #So something happens after the second 088 that stops the later entries from loading on pound?
             #While I'm thinking about it, how does the code know that column is called NUM_IDX in the first place?
-            #And how does the code decide that it's 10 rows and not 12?
             mon = {}
             num = ''
             for c in num_raw:
                 if c.isdigit():
                     num += c
             try:
-                mon[NUM_KEY] = int(num)
+                mon[NUM_KEY] = int(num) #Need to figure out how these keys and indexes are defined!
             except:
                 print(num)
                 mon[NUM_KEY]=num
             mon[NAME_KEY] = cols[NAME_IDX].find('a').text
-            types_tags = cols[TYPES_IDX].findAll('a')
+            types_tags = cols[TYPES_IDX].find_all('a')
             mon[TYPE_KEY] = []
             for a in types_tags:
                 mon[TYPE_KEY].append(a['href'].split('/')[-1])
