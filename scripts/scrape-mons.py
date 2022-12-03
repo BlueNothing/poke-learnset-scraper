@@ -20,51 +20,55 @@ PARSER.add_argument('-o', '--output', action='store', help='Saves the results to
 ARGS = PARSER.parse_args()
 
 #Later version of this code should take a pair of user inputs and cross-reference the specified moves' learnsets for a match.
-
-#Taking a moment here to analyze the structure of the Serebii moveset pages more closely...
-#The important stuff is in the 'content' div, specifically under the 'main' tag, but not everything under the 'main' tag.
-#The good stuff is going to be in a table with class 'dextable'. 
-#What if we try to process *every* dextable that comes up in the attackdex for that page? Junk data that overwhelms the user, more work.
+#All important tables here have the class 'dextable', and start with a 'No.' field for dex number, with corresponding data starting with '#'.
 #Time to make some strategic decisions. Assume user knows what moves do.
 #Limit scope to finding candidates for overlapping learnsets and showing their stats.
-#Deduction - Need to sort through the 'dextables' and only count the ones that start with a dex number field.
-#This is fine because every row we care about will start with a dex number field, no matter how the move is taught.
-#All dex number fields start with a '#', regardless of whether the dex entry they correspond to has a NatDex number.
+#All of the non-obvious variable names draw their definitions from the attached constants.py file.
 
 def get_mons(url):
     LOGGER.info(f"Getting Pokemon from {url}...")
     res = requests.get(url)
     soup = BeautifulSoup(res.text, 'html.parser') 
-    dex_table = soup.find('table',  class_='dextable')
+    dex_table = soup.find('table',  class_='dextable') #These are the right tables, and all of the right tables.
     rows = dex_table.find_all('tr')
     mons = []
-    for index,row in enumerate(rows[2:len(rows) - 1:2]):
+    print(rows)
+    # print("CASE 1: \n \n")
+    #print(rows[2]) #Let's start simply. This one *only* yields Jigglypuff's data.
+   # print("CASE 2: \n \n")
+   # print(rows[2:len(rows)]) #A little more complicated now. This one probably goes wrong. Actually, no. It just... only gives four entries.
+   # print("CASE 3: \n \n")
+   # print(rows[2:len(rows) - 1]) #This one's probably safe but unfulfilling. In truth? Just like CASE 2.
+   # print("CASE 4: \n \n")
+   # print(rows[2:len(rows) - 1:2]) #Okay, so I'm only getting four entries here. What the hell? The table goes on longer.
+   # print ((rows[2]) ==(rows[2:len(rows)]))
+   # print((rows[2:len(rows)]) == (rows[2:len(rows) - 1:2]))
+    print('Entering FOR loop.')
+    for index,row in enumerate(rows[2:len(rows) - 1:2]): #Okay, this is probably the last piece of the puzzle.
         try:
             cols = row.find_all('td')
-            print(len(cols))
-            print(*cols,  sep = "\n")
-            print(NUM_IDX)
-            num_raw = cols[NUM_IDX].text
+            num_raw = cols[NUM_IDX].text #This is just '#', followed by the dex number.
             print(len(num_raw))
-            #Okay, so it seems like num_raw is why we're getting four entries. Why is cols[NUM_IDX].text only getting four entries?
-            print(cols[NUM_IDX].text) #So something happens after the second 088 that stops the later entries from loading on pound?
-            #While I'm thinking about it, how does the code know that column is called NUM_IDX in the first place?
+            print(cols[NUM_IDX].text) 
+            #So something happens after the second 088 that stops the later entries from loading on pound? Still not sure what this is.
             mon = {}
             num = ''
-            for c in num_raw:
+            for c in num_raw: #This is checking through the elements of [NUM_IDX] character by character, and adding the digits to form dex numbers.
+                print(c)
                 if c.isdigit():
                     num += c
             try:
-                mon[NUM_KEY] = int(num) #Need to figure out how these keys and indexes are defined!
+                mon[NUM_KEY] = int(num) #Attempt to render the mon's NUM_KEY as the sequence of digits from num_raw, cast to int.
             except:
-                print(num)
-                mon[NUM_KEY]=num
-            mon[NAME_KEY] = cols[NAME_IDX].find('a').text
+                print('Except.')
+                print(num_raw)
+                mon[NUM_KEY]=num #Attempt to pass the information uncast if casting fails.
+            mon[NAME_KEY] = cols[NAME_IDX].find('a').text #This part looks like it'll extract the Pokemon's name appropriately.
             types_tags = cols[TYPES_IDX].find_all('a')
             mon[TYPE_KEY] = []
             for a in types_tags:
                 mon[TYPE_KEY].append(a['href'].split('/')[-1])
-
+            #This section below seems to be fine, extracting the base stat values for the Pokemon in question.
             mon[HP_KEY] = int(cols[HP_IDX].text)
             mon[ATK_KEY] = int(cols[ATK_IDX].text)
             mon[DEF_KEY] = int(cols[DEF_IDX].text)
