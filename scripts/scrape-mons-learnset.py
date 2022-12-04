@@ -32,7 +32,7 @@ def get_mons(url):
     dex_table = soup.find('table',  class_='dextable') #These are the right tables, and all of the right tables.
     rows = dex_table.find_all('tr')
     mons = []
-    print(rows)
+    print("Printing Rows...")
     # print("CASE 1: \n \n")
     #print(rows[2]) #Let's start simply. This one *only* yields Jigglypuff's data.
    # print("CASE 2: \n \n")
@@ -44,39 +44,33 @@ def get_mons(url):
    # print ((rows[2]) ==(rows[2:len(rows)]))
    # print((rows[2:len(rows)]) == (rows[2:len(rows) - 1:2]))
     print('Entering FOR loop.')
-    for index,row in enumerate(rows[2:len(rows) - 1:2]): #Okay, this is probably the last piece of the puzzle.
+    for index,row in enumerate(rows[2:len(rows) - 1]): #Okay, this is probably the last piece of the puzzle.
         try:
             cols = row.find_all('td')
             num_raw = cols[NUM_IDX].text #This is just '#', followed by the dex number.
-            print(len(num_raw))
-            print(cols[NUM_IDX].text) 
-            #So something happens after the second 088 that stops the later entries from loading on pound? Still not sure what this is.
+            valid = num_raw.startswith('#')
             mon = {}
-            num = ''
-            for c in num_raw: #This is checking through the elements of [NUM_IDX] character by character, and adding the digits to form dex numbers.
-                print(c)
-                if c.isdigit():
-                    num += c
-            try:
-                mon[NUM_KEY] = int(num) #Attempt to render the mon's NUM_KEY as the sequence of digits from num_raw, cast to int.
-            except:
-                print('Except.')
-                print(num_raw)
-                mon[NUM_KEY]=num #Attempt to pass the information uncast if casting fails.
+            if(valid == False):
+                continue
+            #So something happens after the second 088 that stops the later entries from loading on pound? Still not sure what this is.
+            #Okay, so this part seems to be working fine. Since we're not tracking the actual dex numbers anymore, this will suffice to validate row input.
             mon[NAME_KEY] = cols[NAME_IDX].find('a').text #This part looks like it'll extract the Pokemon's name appropriately.
             types_tags = cols[TYPES_IDX].find_all('a')
             mon[TYPE_KEY] = []
             for a in types_tags:
                 mon[TYPE_KEY].append(a['href'].split('/')[-1])
-            #This section below seems to be fine, extracting the base stat values for the Pokemon in question.
-            mon[HP_KEY] = int(cols[HP_IDX].text)
-            mon[ATK_KEY] = int(cols[ATK_IDX].text)
-            mon[DEF_KEY] = int(cols[DEF_IDX].text)
-            mon[SPATK_KEY] = int(cols[SPATK_IDX].text)
-            mon[SPDEF_KEY] = int(cols[SPDEF_IDX].text)
-            mon[SPD_KEY] = int(cols[SPD_IDX].text)
-            print(mon)
-            mons.append(mon)
+                #This section below seems to be fine, extracting the base stat values for the Pokemon in question.
+                mon[HP_KEY] = int(cols[HP_IDX].text)
+                mon[ATK_KEY] = int(cols[ATK_IDX].text)
+                mon[DEF_KEY] = int(cols[DEF_IDX].text)
+                mon[SPATK_KEY] = int(cols[SPATK_IDX].text)
+                mon[SPDEF_KEY] = int(cols[SPDEF_IDX].text)
+                mon[SPD_KEY] = int(cols[SPD_IDX].text)
+                BST = mon[HP_KEY] + mon[ATK_KEY] + mon[DEF_KEY] + mon[SPATK_KEY] + mon[SPDEF_KEY] + mon[SPD_KEY]
+                print(mon)
+                print(BST)
+                mons.append(mon)
+                #Okay, here's a part I still don't get. Why is it still cutting off after Alolan Grimer? Pound can be learned by a bunch of other Pokemon.
         except Exception as ex:
             print(index)
             LOGGER.error(f"Can't parse row {index}. {ex}")
