@@ -32,53 +32,47 @@ def get_mons(url):
     dex_table = soup.find('table',  class_='dextable') #These are the right tables, and all of the right tables.
     rows = dex_table.find_all('tr')
     mons = []
-    print("Printing Rows...")
-    # print("CASE 1: \n \n")
-    #print(rows[2]) #Let's start simply. This one *only* yields Jigglypuff's data.
-   # print("CASE 2: \n \n")
-   # print(rows[2:len(rows)]) #A little more complicated now. This one probably goes wrong. Actually, no. It just... only gives four entries.
-   # print("CASE 3: \n \n")
-   # print(rows[2:len(rows) - 1]) #This one's probably safe but unfulfilling. In truth? Just like CASE 2.
-   # print("CASE 4: \n \n")
-   # print(rows[2:len(rows) - 1:2]) #Okay, so I'm only getting four entries here. What the hell? The table goes on longer.
-   # print ((rows[2]) ==(rows[2:len(rows)]))
-   # print((rows[2:len(rows)]) == (rows[2:len(rows) - 1:2]))
-    print('Entering FOR loop.')
-    for index,row in enumerate(rows[2:len(rows) - 1]): #Okay, this is probably the last piece of the puzzle.
+    print(len(rows)) #Why are there only 10 rows? I need to take a closer look at the table. Seems like there's no reason there should only be 10 rows.
+    testRow = rows[2].findAll('td')
+    print(testRow) #This sort of worked, but the formatting is rubbish. Need to get it organized smoother so I can see why I was getting 13 columns, my count is off.
+    for index,row in enumerate(rows[2:len(rows) - 1:2]):
         try:
-            cols = row.find_all('td')
-            num_raw = cols[NUM_IDX].text #This is just '#', followed by the dex number.
-            valid = num_raw.startswith('#')
+            cols = row.findAll('td')
+            print(len(cols))
+            num_raw = cols[NUM_IDX].text
             mon = {}
-            if(valid == False):
+            num = ''
+            if(not(num_raw.startswith('#'))):
                 continue
-            #So something happens after the second 088 that stops the later entries from loading on pound? Still not sure what this is.
-            #Okay, so this part seems to be working fine. Since we're not tracking the actual dex numbers anymore, this will suffice to validate row input.
-            mon[NAME_KEY] = cols[NAME_IDX].find('a').text #This part looks like it'll extract the Pokemon's name appropriately.
-            types_tags = cols[TYPES_IDX].find_all('a')
+            for c in num_raw:
+                if c.isdigit():
+                    num += c
+            mon[NUM_KEY] = int(num)
+            mon[NAME_KEY] = cols[NAME_IDX].find('a').text
+
+            types_tags = cols[TYPES_IDX].findAll('a')
             mon[TYPE_KEY] = []
             for a in types_tags:
                 mon[TYPE_KEY].append(a['href'].split('/')[-1])
-                #This section below seems to be fine, extracting the base stat values for the Pokemon in question.
-                mon[HP_KEY] = int(cols[HP_IDX].text)
-                mon[ATK_KEY] = int(cols[ATK_IDX].text)
-                mon[DEF_KEY] = int(cols[DEF_IDX].text)
-                mon[SPATK_KEY] = int(cols[SPATK_IDX].text)
-                mon[SPDEF_KEY] = int(cols[SPDEF_IDX].text)
-                mon[SPD_KEY] = int(cols[SPD_IDX].text)
-                BST = mon[HP_KEY] + mon[ATK_KEY] + mon[DEF_KEY] + mon[SPATK_KEY] + mon[SPDEF_KEY] + mon[SPD_KEY]
-                print(mon)
-                print(BST)
-                mons.append(mon)
-                #Okay, here's a part I still don't get. Why is it still cutting off after Alolan Grimer? Pound can be learned by a bunch of other Pokemon.
+
+            mon[HP_KEY] = int(cols[HP_IDX].text)
+            mon[ATK_KEY] = int(cols[ATK_IDX].text)
+            mon[DEF_KEY] = int(cols[DEF_IDX].text)
+            mon[SPATK_KEY] = int(cols[SPATK_IDX].text)
+            mon[SPDEF_KEY] = int(cols[SPDEF_IDX].text)
+            mon[SPD_KEY] = int(cols[SPD_IDX].text)
+            BST = mon[HP_KEY] + mon[ATK_KEY] + mon[DEF_KEY] + mon[SPATK_KEY] + mon[SPDEF_KEY] + mon[SPD_KEY]
+            print(BST)
+            print(mon)
+            mons.append(mon)
         except Exception as ex:
-            print(index)
             LOGGER.error(f"Can't parse row {index}. {ex}")
+        
     LOGGER.info(f'Found {len(mons)}.')
-    LOGGER.info(f'Done getting Pokemon from {url}.')
-
-    return mons
-
+    LOGGER.info(f'Done getting Pokemons from {url}.')
+            #So something happens after the second 088 that stops the later entries from loading on pound? Still not sure what this is.
+            #This section below seems to be fine, extracting the base stat values for the Pokemon in question.
+            
 def write_to_csv(mons, filename):
     with open(filename, 'w', encoding='utf-8', newline = '') as csv_file:
         writer = csv.writer(csv_file)
