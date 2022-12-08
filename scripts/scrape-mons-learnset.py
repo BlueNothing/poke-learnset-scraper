@@ -17,6 +17,7 @@ LOGGER = logging.getLogger(__name__)
 
 PARSER = ArgumentParser(description='Pokemon scraper that pulls the learnset for move specified in argument from Serebii.')
 PARSER.add_argument('-o', '--output', action='store', help='Saves the results to an output .json file.')
+#Add two arguments to take move names, and keep an argument for the output JSON file.
 ARGS = PARSER.parse_args()
 
 #Later version of this code should take a pair of user inputs and cross-reference the specified moves' learnsets for a match.
@@ -25,17 +26,21 @@ ARGS = PARSER.parse_args()
 #Limit scope to finding candidates for overlapping learnsets and showing their stats.
 #All of the non-obvious variable names draw their definitions from the attached constants.py file.
 
+#13 Columns - 
+#Dex Number, ?, Image, Name, 
+
 def get_mons(url):
     LOGGER.info(f"Getting Pokemon from {url}...")
     res = requests.get(url)
     soup = BeautifulSoup(res.text, 'html.parser') 
-    dex_table = soup.find('table',  class_='dextable') #These are the right tables, and all of the right tables.
+    dex_table = soup.find('table',  class_='dextable',  align='center') #After the update, this picks the right table, but still too few rows.
     rows = dex_table.find_all('tr')
     mons = []
     print(len(rows)) #Why are there only 10 rows? I need to take a closer look at the table. Seems like there's no reason there should only be 10 rows.
-    testRow = rows[2].findAll('td')
-    print(testRow) #This sort of worked, but the formatting is rubbish. Need to get it organized smoother so I can see why I was getting 13 columns, my count is off.
-    for index,row in enumerate(rows[2:len(rows) - 1:2]):
+    sampleCols = rows[2].find_all('td')
+    print(list(enumerate(sampleCols)))
+    for index,row in enumerate(rows[2:len(rows) - 1:2]): #rows[2] is where the content starts, and the rows are split between a row and a sub-row, hence the step.
+    #for index,row in enumerate(rows[2:40:2]): This works the same as the above. There's... only four entries that come up on that point.
         try:
             cols = row.findAll('td')
             print(len(cols))
